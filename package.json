@@ -1,0 +1,41 @@
+{
+  "name": "wm-search-cli",
+  "version": "1.0.0",
+  "description": "Extract structured data from Web Motors search results — no API key, no browser, no scraping.",
+  "keywords": [
+    "webmotors",
+    "search",
+    "extractor",
+    "cli",
+    "vehicles",
+    "cars",
+    "automotive"
+  ],
+  "license": "MIT",
+  "author": "Alpha System",
+  "type": "module",
+  "bin": {
+    "wm-search": "./bin/wm-search.js"
+  },
+  "main": "./lib/index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "readyup": "node readyup.js"
+  },
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  },
+  "updated": "2026.02.24.2200"
+}
