@@ -452,20 +452,20 @@ function generateHtml(result, items) {
     const specsHtml = specParts.length > 0 ? `<div class="specs">${specParts.map((s) => `<span class="spec">${esc(s)}</span>`).join("")}</div>` : "";
 
     const locHtml = item.location ? `<p class="location">${esc(item.location)}</p>` : "";
-    const sellerHtml = item.sellerName ? `<p class="seller">por ${esc(item.sellerName)}</p>` : "";
+    const descHtml = item.description ? `<p class="desc">${esc(item.description.replace(/\n+/g, " ").trim().slice(0, 200))}${item.description.replace(/\n+/g, " ").trim().length > 200 ? "\u2026" : ""}</p>` : "";
 
     const attrsHtml = item.attributes?.length ? `<div class="attrs">${item.attributes.map((a) => `<span class="attr">${esc(a)}</span>`).join("")}</div>` : "";
 
     return `<article class="card" data-index="${index}" data-title="${esc((item.title || "").toLowerCase())}" data-desc="${esc((item.description || "").toLowerCase().slice(0, 500))}" data-price="${item.price ?? 0}" data-year="${item.yearModel ?? 0}" data-km="${item.odometer ?? 0}">
-      <div class="img-zone">
-        <a class="img-a" href="${link}" target="_blank" rel="noopener noreferrer">${thumbImg}${thumbPh}</a>
+      <div class="img-zone" data-images="${esc(JSON.stringify(allPics))}">
+        <div class="img-a">${thumbImg}${thumbPh}</div>
         ${galleryStrip}
       </div>
       <div class="card-body">
         ${badges ? `<div class="badges">${badges}</div>` : ""}
         <a class="title-a" href="${link}" target="_blank" rel="noopener noreferrer"><h2 class="card-title">${esc(item.title)}</h2></a>
-        ${priceHtml}${specsHtml}${locHtml}${sellerHtml}${attrsHtml}
-        <a class="btn-cta" href="${link}" target="_blank" rel="noopener noreferrer">Ver anúncio &#8594;</a>
+        ${priceHtml}${specsHtml}${locHtml}${descHtml}${attrsHtml}
+        <a class="btn-cta" href="${link}" target="_blank" rel="noopener noreferrer">Ver an\xFAncio &#8594;</a>
       </div>
     </article>`;
   };
@@ -535,7 +535,7 @@ main{max-width:var(--page-max);margin:0 auto;padding:var(--main-pt) var(--main-p
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:var(--grid-gap)}
 .card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1);transition:box-shadow .2s,transform .2s,border-color .2s}
 .card:hover{box-shadow:var(--sh2);transform:translateY(-3px);border-color:var(--accent)}
-.img-a{display:block;background:var(--surface-2);aspect-ratio:4/3;overflow:hidden;position:relative}
+.img-a{display:block;background:var(--surface-2);aspect-ratio:4/3;overflow:hidden;position:relative;cursor:zoom-in}
 .thumb{width:100%;height:100%;object-fit:contain;padding:var(--thumb-pad);transition:transform .3s ease}
 .img-a:hover .thumb{transform:scale(1.06)}
 .thumb-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);opacity:.3}
@@ -598,7 +598,18 @@ footer a{color:inherit}
 .anti-chip button{background:none;border:none;cursor:pointer;color:inherit;padding:0 0 0 .15rem;line-height:1;font-size:.9rem;opacity:.7;display:flex;align-items:center}
 .anti-chip button:hover{opacity:1}
 @media(max-width:600px){.controls{padding:.6rem .875rem;gap:.5rem}.ctrl-search{max-width:100%;width:100%}.ctrl-count{display:none}}
-@media(max-width:480px){header{padding:.75rem 1rem}.h-meta{display:none}main{padding:1rem .875rem 2.5rem}.grid{gap:.875rem}}`;
+@media(max-width:480px){header{padding:.75rem 1rem}.h-meta{display:none}main{padding:1rem .875rem 2.5rem}.grid{gap:.875rem}}
+.desc{font-size:.72rem;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:.5rem}
+.lightbox.open{display:flex}
+.lb-img{max-width:90vw;max-height:80vh;object-fit:contain;border-radius:8px}
+.lb-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.5rem;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.lb-close:hover{background:rgba(255,255,255,.3)}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;width:48px;height:48px;border-radius:50%;cursor:pointer;font-size:1.5rem;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.lb-nav:hover{background:rgba(255,255,255,.3)}
+.lb-prev{left:1rem}
+.lb-next{right:1rem}
+.lb-counter{color:rgba(255,255,255,.7);font-size:.8rem}`;
 
   const js = `(function(){
   var root=document.documentElement,btn=document.getElementById('theme-btn');
@@ -706,9 +717,26 @@ footer a{color:inherit}
     });
   });
 
+  var lb=document.getElementById('lightbox'),lbImg=document.getElementById('lb-img'),lbCounter=document.getElementById('lb-counter');
+  var lbImages=[],lbIdx=0;
+  function openLb(imgs,idx){lbImages=imgs;lbIdx=idx||0;showLb();lb.classList.add('open');}
+  function closeLb(){lb.classList.remove('open');}
+  function showLb(){if(lbImages.length){lbImg.src=lbImages[lbIdx];lbCounter.textContent=(lbIdx+1)+' / '+lbImages.length;}}
+  function lbPrev(){lbIdx=(lbIdx-1+lbImages.length)%lbImages.length;showLb();}
+  function lbNext(){lbIdx=(lbIdx+1)%lbImages.length;showLb();}
+  document.getElementById('lb-close').addEventListener('click',closeLb);
+  document.getElementById('lb-prev').addEventListener('click',lbPrev);
+  document.getElementById('lb-next').addEventListener('click',lbNext);
+  lb.addEventListener('click',function(e){if(e.target===lb)closeLb();});
+  document.addEventListener('keydown',function(e){if(!lb.classList.contains('open'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowLeft')lbPrev();if(e.key==='ArrowRight')lbNext();});
+  document.querySelectorAll('.img-zone[data-images]').forEach(function(zone){
+    var imgA=zone.querySelector('.img-a');
+    if(imgA){imgA.addEventListener('click',function(){try{var imgs=JSON.parse(zone.dataset.images);if(!imgs.length)return;var activeBtn=zone.querySelector('.gal-btn.active');var idx=0;if(activeBtn){var all=Array.from(zone.querySelectorAll('.gal-btn'));idx=all.indexOf(activeBtn);if(idx<0)idx=0;}openLb(imgs,idx);}catch(e){}});}
+  });
+
   document.addEventListener('click', function(e) {
     var a = e.target.closest('a');
-    if (a && (a.classList.contains('img-a') || a.classList.contains('title-a') || a.classList.contains('btn-cta'))) {
+    if (a && (a.classList.contains('title-a') || a.classList.contains('btn-cta'))) {
       if (!e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         var ev = new MouseEvent('click', {
@@ -776,6 +804,13 @@ ${cardsHtml}
   </div>
 </main>
 <footer>Gerado por <strong>wm-search-cli</strong> &middot; Dados da <a href="https://www.webmotors.com.br" target="_blank" rel="noopener noreferrer">Web Motors</a></footer>
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lb-close" aria-label="Fechar">&times;</button>
+  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Anterior">&#8249;</button>
+  <button class="lb-nav lb-next" id="lb-next" aria-label="Pr\xF3xima">&#8250;</button>
+  <img class="lb-img" id="lb-img" src="" alt="">
+  <span class="lb-counter" id="lb-counter"></span>
+</div>
 <script>${js}</script>
 </body>
 </html>`;
