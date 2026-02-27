@@ -90,13 +90,38 @@ wm-search <query> [options]
 | `--timeout <ms>` | integer | `15000` | HTTP timeout per request. |
 | `--concurrency <n>` | integer | `5` | Parallel request count. |
 | `--strict` | flag | `false` | Keep only items matching all query tokens. |
+| `--no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
 | `-f, --format <type>` | string | `json` | `json`, `table`, `jsonl`, `csv`. |
 | `--pretty` | flag | `false` | Pretty print JSON. |
 | `--raw` | flag | `false` | Return raw API payload and exit. |
 | `--fields <list>` | csv string | none | Keep only selected fields. |
 | `-w, --web` | flag | `false` | Render browser HTML and open it. |
+| `--log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and query-resolution traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
+
+## Rate Limiting
+
+Built-in rate limiting is **enabled by default** to prevent your IP from being blocked by Web Motors.
+
+- **Page delay:** 200 ms between pagination requests
+- **Max concurrency:** 3 parallel requests (overrides `--concurrency` when lower)
+
+To disable rate limiting (at your own risk):
+
+```bash
+wm-search "honda civic" --no-rate-limit
+```
+
+## Logging
+
+Pass `--log` to write a timestamped log file (`wm-search_YYYY-MM-DD_HH-MM-SS.log`) to the project root.
+The file records every HTTP request/response (URL, status code, content-type, body size), the resolved make/model/extraTerms from query parsing, the constructed search URL, any model-truncation retries, per-page result counts, and the final summary.
+No file is created when `--log` is omitted.
+
+```bash
+wm-search "honda civic" --log
+```
 
 ## Output Formats
 
@@ -187,6 +212,7 @@ Main options:
 - `maxKm?: number`
 - `transmission?: string`
 - `strict?: boolean`
+- `noRateLimit?: boolean`
 
 #### `searchRaw(query, options?)`
 
