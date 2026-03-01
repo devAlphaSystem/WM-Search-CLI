@@ -14,6 +14,7 @@ Command line and library tool to extract structured vehicle search results from 
 
 - Node.js `>=18`
 - Network access to Web Motors API endpoints
+- [`nlcurl`](https://github.com/user/nlcurl) — Chrome TLS/HTTP2 fingerprint impersonation (bundled dependency)
 
 ## Installation
 
@@ -74,29 +75,31 @@ wm-search <query> [options]
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `-l, --limit <n>` | integer | `20` | Maximum number of results. |
-| `--sort <order>` | string | `relevance` | Sort: `relevance`, `price_asc`, `price_desc`, `year_desc`. |
-| `--state <uf[,uf...]>` | string | none | One or more UFs, ex: `sp` or `rj,mg`. |
-| `--make <make>` | string | inferred | Vehicle make, ex: `HONDA`. |
-| `--model <model>` | string | inferred | Vehicle model, ex: `Civic`. |
-| `--min-price <n>` | integer | none | Minimum price. |
-| `--max-price <n>` | integer | none | Maximum price. |
-| `--min-year <n>` | integer | none | Minimum model/fabrication year filter. |
-| `--max-year <n>` | integer | none | Maximum model/fabrication year filter. |
-| `--min-km <n>` | integer | none | Minimum mileage. |
-| `--max-km <n>` | integer | none | Maximum mileage. |
-| `--transmission <type>` | string | none | Transmission label, ex: `Manual`, `Automatica`. |
-| `--list-makes` | flag | `false` | Print all known makes and exit. |
-| `--list-states` | flag | `false` | Print all supported UFs and exit. |
-| `--timeout <ms>` | integer | `15000` | HTTP timeout per request. |
-| `--concurrency <n>` | integer | `5` | Parallel request count. |
-| `--strict` | flag | `false` | Keep only items matching all query tokens. |
-| `--no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
+| `-s, --sort <order>` | string | `relevance` | Sort: `relevance`, `price_asc`, `price_desc`, `year_desc`. |
+| `-a, --state <uf[,uf...]>` | string | none | One or more UFs, ex: `sp` or `rj,mg`. |
+| `-m, --make <make>` | string | inferred | Vehicle make, ex: `HONDA`. |
+| `-o, --model <model>` | string | inferred | Vehicle model, ex: `Civic`. |
+| `-P, --min-price <n>` | integer | none | Minimum price. |
+| `-M, --max-price <n>` | integer | none | Maximum price. |
+| `-y, --min-year <n>` | integer | none | Minimum model/fabrication year filter. |
+| `-Y, --max-year <n>` | integer | none | Maximum model/fabrication year filter. |
+| `-k, --min-km <n>` | integer | none | Minimum mileage. |
+| `-K, --max-km <n>` | integer | none | Maximum mileage. |
+| `-T, --transmission <type>` | string | none | Transmission label, ex: `Manual`, `Automatica`. |
+| `-G, --list-makes` | flag | `false` | Print all known makes and exit. |
+| `-A, --list-states` | flag | `false` | Print all supported UFs and exit. |
+| `-t, --timeout <ms>` | integer | `15000` | HTTP timeout per request. |
+| `-n, --concurrency <n>` | integer | `5` | Parallel request count. |
+| `-S, --strict` | flag | `false` | Keep only items matching all query tokens. |
+| `-R, --no-rate-limit` | flag | `false` | Disable built-in rate limiting (may get your IP blocked). |
+| `-1, --save-on-first` | flag | `false` | Save the first HTTP response to the project root as `wm-first_<timestamp>.json` + `.html`. |
+| `-e, --save-on-error` | flag | `false` | Save any HTTP response that returns an error to the project root as `wm-error_<timestamp>.json` + `.html`. |
 | `-f, --format <type>` | string | `json` | `json`, `table`, `jsonl`, `csv`. |
-| `--pretty` | flag | `false` | Pretty print JSON. |
-| `--raw` | flag | `false` | Return raw API payload and exit. |
-| `--fields <list>` | csv string | none | Keep only selected fields. |
+| `-p, --pretty` | flag | `false` | Pretty print JSON. |
+| `-r, --raw` | flag | `false` | Return raw API payload and exit. |
+| `-F, --fields <list>` | csv string | none | Keep only selected fields. |
 | `-w, --web` | flag | `false` | Render browser HTML and open it. |
-| `--log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and query-resolution traces. |
+| `-L, --log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and query-resolution traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
 
@@ -116,7 +119,7 @@ wm-search "honda civic" --no-rate-limit
 ## Logging
 
 Pass `--log` to write a timestamped log file (`wm-search_YYYY-MM-DD_HH-MM-SS.log`) to the project root.
-The file records every HTTP request/response (URL, status code, content-type, body size), the resolved make/model/extraTerms from query parsing, the constructed search URL, any model-truncation retries, per-page result counts, and the final summary.
+The file records every HTTP request/response (URL, status code, content-type, body size), the resolved make/model/extraTerms from query parsing, the constructed search URL, any model-truncation retries, per-page result counts, and a request count summary (total and page calls).
 No file is created when `--log` is omitted.
 
 ```bash

@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { search, searchRaw, getMakes, getStates } from "../lib/index.js";
 import { initLogger, log, closeLogger } from "../lib/logger.js";
+import fs from "node:fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,30 +35,32 @@ const HELP = `
 
   \x1b[1mOptions:\x1b[0m
     -l, --limit <n>        Max results to return (default: 20)
-    --sort <order>         Sort: "relevance", "price_asc", "price_desc", "year_desc"
-    --state <uf>           Filter by Brazilian state(s). Single UF or comma-separated (e.g. "sp", "rj,mg")
-    --make <make>          Filter by vehicle make (e.g. "HONDA")
-    --model <model>        Filter by vehicle model (e.g. "Civic")
-    --min-price <n>        Minimum price filter
-    --max-price <n>        Maximum price filter
-    --min-year <n>         Minimum year filter
-    --max-year <n>         Maximum year filter
-    --min-km <n>           Minimum mileage filter
-    --max-km <n>           Maximum mileage filter
-    --transmission <type>  Transmission: "Manual" or "Automática"
-    --list-makes           List all known vehicle makes and exit
-    --list-states          List all valid states and exit
-    --timeout <ms>         HTTP timeout in ms (default: 15000)
-    --concurrency <n>      Max parallel requests (default: 5)
-    --strict               Only show results where ALL search terms appear
-    --no-rate-limit        Disable built-in rate limiting (use at your own risk — may get your IP blocked)
-    --log                  Write a detailed debug log file to the project root
+    -s, --sort <order>     Sort: "relevance", "price_asc", "price_desc", "year_desc"
+    -a, --state <uf>       Filter by Brazilian state(s). Single UF or comma-separated (e.g. "sp", "rj,mg")
+    -m, --make <make>      Filter by vehicle make (e.g. "HONDA")
+    -o, --model <model>    Filter by vehicle model (e.g. "Civic")
+    -P, --min-price <n>    Minimum price filter
+    -M, --max-price <n>    Maximum price filter
+    -y, --min-year <n>     Minimum year filter
+    -Y, --max-year <n>     Maximum year filter
+    -k, --min-km <n>       Minimum mileage filter
+    -K, --max-km <n>       Maximum mileage filter
+    -T, --transmission <t> Transmission: "Manual" or "Automática"
+    -G, --list-makes       List all known vehicle makes and exit
+    -A, --list-states      List all valid states and exit
+    -t, --timeout <ms>     HTTP timeout in ms (default: 15000)
+    -n, --concurrency <n>  Max parallel requests (default: 5)
+    -S, --strict           Only show results where ALL search terms appear
+    -R, --no-rate-limit    Disable built-in rate limiting (use at your own risk — may get your IP blocked)
+    -1, --save-on-first    Save the first HTTP response (JSON) to the project root
+    -e, --save-on-error    Save any HTTP response that returns an error (JSON) to the project root
+    -L, --log              Write a detailed debug log file to the project root
 
   \x1b[1mOutput:\x1b[0m
     -f, --format <type>    Output format: "json", "table", "jsonl", "csv" (default: json)
-    --pretty               Pretty-print JSON output
-    --raw                  Output the full raw API response
-    --fields <list>        Comma-separated fields to include (e.g. "title,price,permalink")
+    -p, --pretty           Pretty-print JSON output
+    -r, --raw              Output the full raw API response
+    -F, --fields <list>    Comma-separated fields to include (e.g. "title,price,permalink")
     -w, --web              Open results as a web page in the browser
 
   \x1b[1mExamples:\x1b[0m
@@ -80,28 +83,30 @@ try {
     allowPositionals: true,
     options: {
       limit: { type: "string", short: "l" },
-      sort: { type: "string" },
-      state: { type: "string" },
-      make: { type: "string" },
-      model: { type: "string" },
-      "min-price": { type: "string" },
-      "max-price": { type: "string" },
-      "min-year": { type: "string" },
-      "max-year": { type: "string" },
-      "min-km": { type: "string" },
-      "max-km": { type: "string" },
-      transmission: { type: "string" },
-      "list-makes": { type: "boolean", default: false },
-      "list-states": { type: "boolean", default: false },
-      timeout: { type: "string" },
-      concurrency: { type: "string" },
-      strict: { type: "boolean", default: false },
-      "no-rate-limit": { type: "boolean", default: false },
-      log: { type: "boolean", default: false },
+      sort: { type: "string", short: "s" },
+      state: { type: "string", short: "a" },
+      make: { type: "string", short: "m" },
+      model: { type: "string", short: "o" },
+      "min-price": { type: "string", short: "P" },
+      "max-price": { type: "string", short: "M" },
+      "min-year": { type: "string", short: "y" },
+      "max-year": { type: "string", short: "Y" },
+      "min-km": { type: "string", short: "k" },
+      "max-km": { type: "string", short: "K" },
+      transmission: { type: "string", short: "T" },
+      "list-makes": { type: "boolean", short: "G", default: false },
+      "list-states": { type: "boolean", short: "A", default: false },
+      timeout: { type: "string", short: "t" },
+      concurrency: { type: "string", short: "n" },
+      strict: { type: "boolean", short: "S", default: false },
+      "no-rate-limit": { type: "boolean", short: "R", default: false },
+      "save-on-first": { type: "boolean", short: "1", default: false },
+      "save-on-error": { type: "boolean", short: "e", default: false },
+      log: { type: "boolean", short: "L", default: false },
       format: { type: "string", short: "f" },
-      pretty: { type: "boolean", default: false },
-      raw: { type: "boolean", default: false },
-      fields: { type: "string" },
+      pretty: { type: "boolean", short: "p", default: false },
+      raw: { type: "boolean", short: "r", default: false },
+      fields: { type: "string", short: "F" },
       web: { type: "boolean", short: "w", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
@@ -244,6 +249,8 @@ try {
     transmission: opts.transmission,
     strict: opts.strict,
     noRateLimit: opts["no-rate-limit"],
+    onFirstResponse: opts["save-on-first"] ? makeSaveCallback("wm-first") : null,
+    onErrorResponse: opts["save-on-error"] ? makeSaveCallback("wm-error") : null,
   });
 
   let items = result.items;
@@ -269,6 +276,11 @@ try {
     if (result.pagination.capped) {
       process.stderr.write(`\x1b[33mNote:\x1b[0m Returned ${got} of ${limit} requested.\n`);
     }
+  }
+
+  if (result.stats) {
+    const s = result.stats;
+    log("CLI", `Requests: ${s.requests} total (${s.pageRequests} page${s.pageRequests !== 1 ? "s" : ""} + ${s.detailRequests} detail${s.detailRequests !== 1 ? "s" : ""})`);
   }
 } catch (e) {
   log("CLI", "Fatal error", e);
@@ -837,16 +849,44 @@ ${cardsHtml}
 async function openInBrowser(result, items) {
   const { writeFileSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
-  const { exec } = await import("node:child_process");
+  const { spawn } = await import("node:child_process");
   const { join } = await import("node:path");
 
   const html = generateHtml(result, items);
   const file = join(tmpdir(), `wm-search-${Date.now()}.html`);
   writeFileSync(file, html, "utf8");
 
-  const cmd = process.platform === "win32" ? `start "" "${file}"` : process.platform === "darwin" ? `open "${file}"` : `xdg-open "${file}"`;
-  exec(cmd);
+  const opts = { detached: true, stdio: "ignore", windowsHide: true };
+  if (process.platform === "win32") {
+    spawn("cmd", ["/c", "start", "", file], opts).unref();
+  } else if (process.platform === "darwin") {
+    spawn("open", [file], opts).unref();
+  } else {
+    spawn("xdg-open", [file], opts).unref();
+  }
   process.stderr.write(`Opened in browser: ${file}\n`);
+}
+
+/**
+ * Creates a callback that saves HTTP response data to files in the project root.
+ * Each invocation writes a `.json` metadata file and, when a body is present, an `.html` file.
+ *
+ * @param {string} prefix - Filename prefix (e.g. `"wm-first"` or `"wm-error"`).
+ * @returns {(data: {url: string, body: string|null, error: string|null, timestamp: string}) => Promise<void>}
+ */
+function makeSaveCallback(prefix) {
+  let callCount = 0;
+  return async ({ url, body, error: errorMsg, timestamp }) => {
+    callCount++;
+    const ts = timestamp.replace(/[:.]/g, "-").replace("T", "_").substring(0, 19);
+    const suffix = callCount > 1 ? `_${callCount}` : "";
+    const baseName = `${prefix}_${ts}${suffix}`;
+    const rootDir = path.join(__dirname, "..");
+    const meta = { url, timestamp, error: errorMsg || null, bodyLength: body ? body.length : 0 };
+    fs.writeFileSync(path.join(rootDir, `${baseName}.json`), JSON.stringify(meta, null, 2), "utf-8");
+    if (body) fs.writeFileSync(path.join(rootDir, `${baseName}.html`), body, "utf-8");
+    log("CLI", `Saved: ${baseName}.json${body ? ` + ${baseName}.html` : ""}`);
+  };
 }
 
 /**
