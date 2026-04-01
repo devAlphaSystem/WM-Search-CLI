@@ -1,6 +1,6 @@
 {
   "name": "wm-search-cli",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Extract structured data from Web Motors search results — no API key, no browser, no scraping.",
   "keywords": [
     "webmotors",
