@@ -62,6 +62,7 @@ const HELP = `
     -r, --raw              Output the full raw API response
     -F, --fields <list>    Comma-separated fields to include (e.g. "title,price,permalink")
     -w, --web              Open results as a web page in the browser
+    -j, --save-json        Save results as a JSON file in the current directory
 
   \x1b[1mExamples:\x1b[0m
     wm-search "Honda Civic"
@@ -108,6 +109,7 @@ try {
       raw: { type: "boolean", short: "r", default: false },
       fields: { type: "string", short: "F" },
       web: { type: "boolean", short: "w", default: false },
+      "save-json": { type: "boolean", short: "j", default: false },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
     },
@@ -269,6 +271,13 @@ try {
     await openInBrowser(result, items);
   } else {
     output(items, result, format, opts.pretty);
+  }
+
+  if (opts["save-json"]) {
+    const ts = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").substring(0, 19);
+    const fname = `wm-results_${ts}.json`;
+    fs.writeFileSync(fname, JSON.stringify({ ...result, items }, null, 2), "utf-8");
+    process.stderr.write(`\x1b[32mSaved:\x1b[0m ${fname}\n`);
   }
 
   const got = result.items.length;

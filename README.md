@@ -99,6 +99,7 @@ wm-search <query> [options]
 | `-r, --raw` | flag | `false` | Return raw API payload and exit. |
 | `-F, --fields <list>` | csv string | none | Keep only selected fields. |
 | `-w, --web` | flag | `false` | Render browser HTML and open it. |
+| `-j, --save-json` | flag | `false` | Save results as `wm-results_<timestamp>.json` in the current directory (always runs, regardless of `--format` or `--web`). |
 | `-L, --log` | flag | `false` | Write a timestamped `.log` file to the project root with HTTP, search, and query-resolution traces. |
 | `-h, --help` | flag | `false` | Show help. |
 | `-v, --version` | flag | `false` | Show package version. |
